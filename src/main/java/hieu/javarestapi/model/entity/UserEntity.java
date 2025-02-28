@@ -1,6 +1,7 @@
 package hieu.javarestapi.model.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,8 +17,14 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
+@Builder
 @Table(name = "tbl_user")
 public class UserEntity {
+
+    public UserEntity(){
+
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
