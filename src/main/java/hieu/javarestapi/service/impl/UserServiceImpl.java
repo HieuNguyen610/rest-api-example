@@ -5,15 +5,23 @@ import hieu.javarestapi.model.entity.UserEntity;
 import hieu.javarestapi.model.request.UserCreateRequest;
 import hieu.javarestapi.model.request.UserSearchRequest;
 import hieu.javarestapi.model.request.UserUpdateRequest;
+import hieu.javarestapi.model.response.UserPageResponse;
 import hieu.javarestapi.model.response.UserResponse;
 import hieu.javarestapi.repository.UserRepository;
 import hieu.javarestapi.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -74,6 +82,35 @@ public class UserServiceImpl implements UserService {
         return objectMapper.convertValue(savedUser, UserResponse.class);
     }
 
+    @Override
+    public UserPageResponse findAll(String keyword, String sort, int page, int size) {
+        Sort.Order order = new Sort.Order(Sort.Direction.ASC, "id");
+        if (StringUtils.hasLength(sort)) {
+            Pattern pattern = Pattern.compile("(\\w+?)(:)(.*)");
+            Matcher matcher = pattern.matcher(sort);
+            if (matcher.find()) {
+                String fieldName = matcher.group(1);
+                Sort.Direction direction = Sort.Direction.fromString(matcher.group(2));
+                order = new Sort.Order(direction, fieldName);
+            }
+        }
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<UserEntity> userEntities = userRepository.findAll(pageable);
+        int limit = size;
+        int offset = size * page;
+        List<UserEntity> userEntitiesList = userRepository.searchByKeyword(keyword, limit, offset);
+        List<UserResponse> userResponses = convertEntityToResponse(userEntities.getContent());
+        int count = (int) userRepository.count();
+
+        return UserPageResponse.builder()
+                .pageNumber(page)
+                .pageSize(size)
+                .totalElements(count)
+                .totalPages((int) Math.ceil((double) count /size))
+                .data(userResponses)
+                .build();
+    }
+
     private UserEntity getUserEntity(Long userId) {
         return userRepository.findById(userId).orElseThrow(
                 () -> new NoSuchElementException("User not found")
@@ -82,5 +119,9 @@ public class UserServiceImpl implements UserService {
 
     private UserResponse convertEntityToResponse(UserEntity entity) {
         return objectMapper.convertValue(entity, UserResponse.class);
+    }
+
+    private List<UserResponse> convertEntityToResponse(List<UserEntity> entities) {
+        return entities.stream().map(this::convertEntityToResponse).collect(Collectors.toList());
     }
 }

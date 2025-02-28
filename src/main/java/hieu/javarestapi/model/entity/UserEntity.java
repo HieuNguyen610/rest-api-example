@@ -1,6 +1,7 @@
 package hieu.javarestapi.model.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,7 @@ import java.util.Date;
 @Setter
 @Entity
 @Builder
+@AllArgsConstructor
 @Table(name = "tbl_user")
 public class UserEntity {
 

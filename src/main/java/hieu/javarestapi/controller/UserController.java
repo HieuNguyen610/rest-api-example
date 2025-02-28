@@ -4,6 +4,7 @@ import hieu.javarestapi.common.Gender;
 import hieu.javarestapi.model.request.UserCreateRequest;
 import hieu.javarestapi.model.request.UserSearchRequest;
 import hieu.javarestapi.model.request.UserUpdateRequest;
+import hieu.javarestapi.model.response.UserPageResponse;
 import hieu.javarestapi.model.response.UserResponse;
 import hieu.javarestapi.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,12 +25,16 @@ public class UserController {
 
     @GetMapping("/list")
     @Operation(summary = "Get user list", description = "get all users")
-    public Map<String, Object> getUsersList() {
-        log.info("get users list");
+    public Map<String, Object> getUsersList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) int page,
+            @RequestParam(required = false) int size
+    ) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("status", HttpStatus.OK);
-        result.put("message", "User list");
-        result.put("data", userService.getAllUsers());
+        result.put("message", "User search");
+        result.put("data", userService.findAll(keyword, sort, page, size));
         return result;
     }
 
