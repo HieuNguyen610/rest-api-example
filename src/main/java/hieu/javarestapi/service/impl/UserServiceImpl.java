@@ -1,6 +1,7 @@
 package hieu.javarestapi.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hieu.javarestapi.exception.ResourceNotFoundException;
 import hieu.javarestapi.model.entity.UserEntity;
 import hieu.javarestapi.model.request.UserCreateRequest;
 import hieu.javarestapi.model.request.UserUpdateRequest;
@@ -15,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
 
     private UserEntity getUserEntity(Long userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new NoSuchElementException("User not found")
+                () -> new ResourceNotFoundException("User not found")
         );
     }
 

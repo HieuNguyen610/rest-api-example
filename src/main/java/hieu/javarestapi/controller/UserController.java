@@ -6,9 +6,11 @@ import hieu.javarestapi.model.request.UserUpdateRequest;
 import hieu.javarestapi.model.response.UserResponse;
 import hieu.javarestapi.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -16,6 +18,7 @@ import java.util.*;
 @RestController
 @RequiredArgsConstructor
 @Slf4j(topic = "USER-CONTROLLER")
+@Validated
 @RequestMapping("/users")
 public class UserController {
 
@@ -26,8 +29,8 @@ public class UserController {
     public Map<String, Object> getUsersList(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sort,
-            @RequestParam(required = false) int page,
-            @RequestParam(required = false) int size
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size
     ) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("status", HttpStatus.OK);
@@ -38,7 +41,8 @@ public class UserController {
 
     @GetMapping("/{userId}")
     @Operation(summary = "Get user details", description = "Get user details by userId")
-    public Map<String, Object> getUserDetailById(@PathVariable("userId") Long userId) {
+    public Map<String, Object> getUserDetailById(
+            @PathVariable("userId") @Min(value = 1, message = "userId must be greater or equals 1") Long userId) {
         log.info("get user id: {}", userId);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("status", HttpStatus.OK);
@@ -61,7 +65,7 @@ public class UserController {
 
     @PostMapping("/create")
     @Operation(summary = "Create new user", description = "Create new user")
-    public Map<String, Object> createUser(@RequestBody UserCreateRequest request) {
+    public Map<String, Object> createUser(@RequestBody @Validated UserCreateRequest request) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("status", HttpStatus.OK);
         result.put("message", "User created");
