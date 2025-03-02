@@ -1,7 +1,6 @@
 package hieu.javarestapi.service;
 
 import hieu.javarestapi.model.request.UserCreateRequest;
-import hieu.javarestapi.model.request.UserSearchRequest;
 import hieu.javarestapi.model.request.UserUpdateRequest;
 import hieu.javarestapi.model.response.UserPageResponse;
 import hieu.javarestapi.model.response.UserResponse;
@@ -15,7 +14,7 @@ public interface UserService {
 
     UserResponse updateUserById(UserUpdateRequest userUpdateRequest);
 
-    List<UserResponse> getUsersByCriterias(UserSearchRequest usersearchRequest);
+    List<UserResponse> getUsersByCriterias(int page, int pageSize, String keyword);
 
     UserResponse createUser(UserCreateRequest request);
 

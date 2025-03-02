@@ -3,15 +3,12 @@ package hieu.javarestapi.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hieu.javarestapi.model.entity.UserEntity;
 import hieu.javarestapi.model.request.UserCreateRequest;
-import hieu.javarestapi.model.request.UserSearchRequest;
 import hieu.javarestapi.model.request.UserUpdateRequest;
 import hieu.javarestapi.model.response.UserPageResponse;
 import hieu.javarestapi.model.response.UserResponse;
 import hieu.javarestapi.repository.UserRepository;
 import hieu.javarestapi.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +57,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponse> getUsersByCriterias(UserSearchRequest request) {
+    public List<UserResponse> getUsersByCriterias(int page, int pageSize, String keyword) {
         List<UserEntity> userEntities = userRepository.findAll();
         return userEntities.stream().map(userEntity -> objectMapper.convertValue(userEntity, UserResponse.class)).toList();
     }
@@ -94,13 +91,16 @@ public class UserServiceImpl implements UserService {
                 order = new Sort.Order(direction, fieldName);
             }
         }
-        Pageable pageable = Pageable.ofSize(size).withPage(page);
-        Page<UserEntity> userEntities = userRepository.findAll(pageable);
+
         int limit = size;
         int offset = size * page;
+        if (keyword != null) {
+            keyword = "%" + keyword.toLowerCase() + "%";
+        }
+
         List<UserEntity> userEntitiesList = userRepository.searchByKeyword(keyword, limit, offset);
-        List<UserResponse> userResponses = convertEntityToResponse(userEntities.getContent());
-        int count = (int) userRepository.count();
+        List<UserResponse> userResponses = convertEntityToResponse(userEntitiesList);
+        int count = userRepository.countByKeyword(keyword);
 
         return UserPageResponse.builder()
                 .pageNumber(page)

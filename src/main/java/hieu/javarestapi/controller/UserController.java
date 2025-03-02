@@ -2,9 +2,7 @@ package hieu.javarestapi.controller;
 
 import hieu.javarestapi.common.Gender;
 import hieu.javarestapi.model.request.UserCreateRequest;
-import hieu.javarestapi.model.request.UserSearchRequest;
 import hieu.javarestapi.model.request.UserUpdateRequest;
-import hieu.javarestapi.model.response.UserPageResponse;
 import hieu.javarestapi.model.response.UserResponse;
 import hieu.javarestapi.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,11 +48,14 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public Map<String, Object> findUsers (@RequestParam UserSearchRequest usersearchRequest) {
+    public Map<String, Object> findUsers (
+            @RequestParam(required = false) int page,
+            @RequestParam(required = false) int pageSize,
+            @RequestParam(required = false) String keyword) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("status", HttpStatus.OK);
         result.put("message", "Search users");
-        result.put("data", userService.getUsersByCriterias(usersearchRequest));
+        result.put("data", userService.getUsersByCriterias(page, pageSize, keyword));
         return result;
     }
 
