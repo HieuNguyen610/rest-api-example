@@ -20,12 +20,17 @@ import java.security.Key;
 import java.util.*;
 import java.util.function.Function;
 
+import static hieu.javarestapi.common.TokenType.ACCESS_TOKEN;
+
 @Service
 @Slf4j(topic = "JWT-SERVICE")
 public class JwtServiceImpl implements JwtService {
 
     @Value("${jwt.expiry-minutes}")
     private long expiryMinutes;
+
+    @Value("${jwt.expiry-days}")
+    private long expiryDays;
 
     @Value("${jwt.access-key}")
     private String accessKey;
@@ -61,22 +66,22 @@ public class JwtServiceImpl implements JwtService {
     private String generateToken(Map<String, Object> claims, String username) {
         log.info("Generate access token for user {} with claims {}", username, claims);
         return Jwts.builder()
-                .claims(claims)
-                .subject(username)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * expiryMinutes))
-                .signWith(getKey(TokenType.ACCESS_TOKEN), SignatureAlgorithm.HS256)
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * expiryMinutes))
+                .signWith(getKey(ACCESS_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     private String generateRefreshToken(Map<String, Object> claims, String username) {
         log.info("Generate refresh token for user {} with claims {}", username, claims);
         return Jwts.builder()
-                .claims(claims)
-                .subject(username)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * expiryMinutes))
-                .signWith(getKey(TokenType.REFRESH_TOKEN), SignatureAlgorithm.HS256)
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * expiryDays))
+                .signWith(getKey(ACCESS_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -99,12 +104,13 @@ public class JwtServiceImpl implements JwtService {
 
     private Claims extractAllClaims(String token, TokenType type) throws AccessDeniedException {
         try {
-            return Jwts.parser()
-                    .setSigningKey(getKey(type))
-                    .build().parseSignedClaims(token)
-                   .getPayload();
-        } catch (SignatureException | ExpiredJwtException e) {
-            throw new AccessDeniedException("Access denied");
+            return Jwts.parserBuilder().setSigningKey(getKey(type)).build().parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException e) {
+            throw new AccessDeniedException("Token has expired, error: " + e.getMessage());
+        } catch (SignatureException e) {
+            throw new AccessDeniedException("Invalid token signature, error: " + e.getMessage());
+        } catch (Exception e) {
+            throw new AccessDeniedException("Error processing token: " + e.getMessage());
         }
     }
 }
