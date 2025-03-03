@@ -2,6 +2,7 @@ package hieu.javarestapi.controller;
 
 import hieu.javarestapi.model.request.SignInRequest;
 import hieu.javarestapi.model.response.TokenResponse;
+import hieu.javarestapi.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.file.AccessDeniedException;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -18,14 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Auth Controller")
 public class AuthController {
 
+    private final AuthenticationService authenticationService;
+
     @Operation(summary = "Access token", description = "Get access token and refresh token by username and password")
     @PostMapping("/access-token")
-    public TokenResponse getAccessToken(@RequestBody SignInRequest request) {
+    public TokenResponse getAccessToken(@RequestBody SignInRequest request) throws AccessDeniedException {
         log.info(" Request access token");
-        return TokenResponse.builder()
-                .accessToken("DUMMY-ACCESS-TOKEN")
-                .refreshToken("DUMMY-REFRESH-TOKEN")
-                .build();
+        return authenticationService.getAccessToken(request);
     }
 
     @Operation(summary = "Refresh token", description = "Get new access token and refresh token by refresh token")
